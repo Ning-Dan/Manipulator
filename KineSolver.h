@@ -35,6 +35,8 @@ private:
   IKStatus IsJointWithinLimit(const Eigen::VectorXd &jnt);
   void LimitJoints(double &joint);
   std::vector<double> SolveTrigonometricEquation(double a, double b, double c);
+  void SolveTheta3(double x, double y,std::vector<double> *theta3);
+  void SolveTheta2(double theta3,std::vector<double> *theta2);
 
   std::array<double, 6> jnt_upper_limit_;
   std::array<double, 6> jnt_lower_limit_;
@@ -45,6 +47,5 @@ private:
   std::array<double, 6> d_;
   std::array<double, 6> theta_;
   Eigen::Vector3d p_w{0, 0, 0};
-
-  double count = 0;
+  double belta_{0.0};
 };
