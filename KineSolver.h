@@ -20,10 +20,12 @@ enum class IKStatus : size_t
 class KineSolver
 {
 public:
-  KineSolver(const std::array<double, 6> &a, const std::array<double, 6> &alpha, const std::array<double, 6> &d, const std::array<double, 6> &theta);
+  KineSolver(const std::array<double, 7> &a, const std::array<double, 7> &alpha, const std::array<double, 7> &d, const std::array<double, 7> &theta);
   ~KineSolver();
 
   Eigen::Isometry3d ComputeFK(const Eigen::VectorXd &jnts, bool is_deg = false);
+  Eigen::Isometry3d ComputeBaseEndfTf(const Eigen::VectorXd &jnts, bool is_deg = false);
+
   IKStatus ComputeIK(const Eigen::Isometry3d &tf, const Eigen::VectorXd &init_jnt, Eigen::VectorXd *jnts);
   void ComputeAllIK(const Eigen::Isometry3d &tf, std::vector<Eigen::VectorXd> *res_vec);
 
@@ -31,6 +33,7 @@ public:
 
 private:
   Eigen::Isometry3d DH(std::size_t id, double theta, bool is_deg = false);
+  Eigen::Isometry3d mDH(std::size_t id, double theta, bool is_deg = false);
   void SolveSphereWrist(double theta1, double theta2, double theta3, const Eigen::Isometry3d &tf, std::vector<Eigen::VectorXd> *res_vec);
   IKStatus IsJointWithinLimit(const Eigen::VectorXd &jnt);
   void LimitJoints(double &joint);
@@ -42,10 +45,10 @@ private:
   std::array<double, 6> jnt_lower_limit_;
 
   std::size_t dof_ = 6;
-  std::array<double, 6> a_;
-  std::array<double, 6> alpha_;
-  std::array<double, 6> d_;
-  std::array<double, 6> theta_;
+  std::array<double, 7> a_;
+  std::array<double, 7> alpha_;
+  std::array<double, 7> d_;
+  std::array<double, 7> theta_;
   Eigen::Vector3d p_w{0, 0, 0};
   double belta_{0.0};
 };

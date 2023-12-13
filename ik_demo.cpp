@@ -9,16 +9,54 @@ using namespace std;
 
 double get_random_num()
 {
-    return 2 * M_PI * (rand() / (std::pow(2, 31))) - M_PI;
+    return M_PI * (rand() / (std::pow(2, 31))) - M_PI / 2;
 }
 
-int main()
+void test_ik()
+{
+    // std::array<double, 7> a = {0.15, 0.78, 0.2, 0, 0, 0};
+    std::array<double, 7> a = {0, 0.15, 0.78, 0.2, 0, 0, 0};
+    std::array<double, 7> alpha = {0, -M_PI / 2, 0, M_PI / 2, -M_PI / 2, -M_PI / 2, -M_PI};
+    std::array<double, 7> d = {0, 0, 0, -1.08, 0, -0.1, 0};
+    std::array<double, 7> theta = {0, -M_PI / 2, 0, 0, M_PI, 0, -M_PI};
+    // set jnts limit
+    std::array<double, 6> upper_limit{170 * DEG_2_RAD, 160 * DEG_2_RAD, 311.9 * DEG_2_RAD, 200 * DEG_2_RAD, 140 * DEG_2_RAD, 270 * DEG_2_RAD};
+    std::array<double, 6> lower_limit{-170 * DEG_2_RAD, -90 * DEG_2_RAD, -135.1 * DEG_2_RAD, -200 * DEG_2_RAD, -140 * DEG_2_RAD, -270 * DEG_2_RAD};
+
+    // init kine solver
+    std::unique_ptr<KineSolver> kine_ptr = std::make_unique<KineSolver>(a, alpha, d, theta);
+    kine_ptr->SetJntLimit(lower_limit, upper_limit);
+
+    Eigen::VectorXd res_jnts(6);
+    for (int i = 0; i < 1000; ++i)
+    {
+        Eigen::VectorXd jnts(6);
+        std::cout << "+++++++++++" << std::endl;
+        jnts << get_random_num(), get_random_num(), get_random_num(), get_random_num(), get_random_num(), get_random_num();
+        std::cout << "jnts:" << jnts.transpose() * 180 / M_PI << std::endl;
+
+        Eigen::Isometry3d tf = kine_ptr->ComputeFK(jnts, false);
+        // std::cout << "tf:" << tf.matrix() << std::endl;
+
+        IKStatus res = kine_ptr->ComputeIK(tf, jnts, &res_jnts);
+        std::cout << "res_jnts:" << res_jnts.transpose() * 180 / M_PI << std::endl;
+        if ((jnts - res_jnts).norm() > 1e-3)
+        {
+            std::cout << "[warning] Ik failed at:" << i << std::endl;
+            break;
+        }
+
+        std::cout << "__________________  " << i << std::endl;
+    }
+}
+
+void test_kine_class()
 {
     // set DH table
-    std::array<double, 6> a = {0.15, 0.78, 0.2, 0, 0, 0};
-    std::array<double, 6> alpha = {M_PI / 2, 0, M_PI / 2, -M_PI / 2, M_PI / 2, 0};
-    std::array<double, 6> d = {0, 0, 0, 1.08, 0, 0.1};
-    std::array<double, 6> theta = {0, M_PI / 2, 0, 0, 0, 0};
+    std::array<double, 7> a = {0, 0.78, 0, 0, 0, 0, 0};
+    std::array<double, 7> alpha = {M_PI / 2, 0, M_PI / 2, -M_PI / 2, M_PI / 2, 0, -M_PI};
+    std::array<double, 7> d = {0, 0, 0, 1.08, 0, 0.1, 0};
+    std::array<double, 7> theta = {0, M_PI / 2, 0, 0, 0, 0, -M_PI};
 
     // set jnts limit
     std::array<double, 6> upper_limit{170 * DEG_2_RAD, 160 * DEG_2_RAD, 311.9 * DEG_2_RAD, 200 * DEG_2_RAD, 140 * DEG_2_RAD, 270 * DEG_2_RAD};
@@ -53,17 +91,20 @@ int main()
         // }
         Eigen::VectorXd res_jnts(6);
 
-        kine_ptr->ComputeIK(tf,jnts,&res_jnts);
+        kine_ptr->ComputeIK(tf, jnts, &res_jnts);
         std::cout << "res_jnts:" << res_jnts.transpose() << std::endl;
 
-        if ((jnts-res_jnts).norm()>1e-3)
+        if ((jnts - res_jnts).norm() > 1e-3)
         {
             std::cout << "[warning] Ik failed:" << res_vec.size() << "  i:" << i << std::endl;
             break;
         }
 
-        std::cout << "__________________  "<<i << std::endl;
+        std::cout << "__________________  " << i << std::endl;
     }
+}
 
-    return 0;
+int main()
+{
+    test_ik();
 }
