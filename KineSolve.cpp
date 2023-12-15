@@ -393,3 +393,41 @@ void KineSolver::SetJntLimit(const std::array<double, 6> &lower, const std::arra
     jnt_lower_limit_ = lower;
     jnt_upper_limit_ = upper;
 }
+
+Eigen::Matrix3d KineSolver::ConvertWPR2Matrix(double w, double p, double r, bool is_deg)
+{
+    if (is_deg)
+    {
+        w *= DEG_2_RAD;
+        p *= DEG_2_RAD;
+        r *= DEG_2_RAD;
+    }
+    Eigen::Matrix3d M;
+    M = Eigen::AngleAxisd(r, Eigen::Vector3d::UnitZ()) *
+        Eigen::AngleAxisd(p, Eigen::Vector3d::UnitY()) *
+        Eigen::AngleAxisd(w, Eigen::Vector3d::UnitX());
+    return M;
+}
+
+void KineSolver::AdjustJntsAxisSeq(Eigen::VectorXd &jnts, bool is_dh2fanuc)
+{
+    if (is_dh2fanuc)
+    {
+        jnts[4] = -jnts[4];
+        jnts[2] = -(jnts[1] + jnts[2]);
+    }
+    else
+    {
+        jnts[2] = -(jnts[1] + jnts[2]);
+        jnts[4] = -jnts[4];
+    }
+}
+IKStatus KineSolver::ComputeIK(double w, double p, double r, double x, double y, double z,
+                               const Eigen::VectorXd &init_jnt, Eigen::VectorXd *jnts, bool is_deg)
+{
+    Eigen::Isometry3d tf;
+    tf.linear() = ConvertWPR2Matrix(w, p, r);
+    tf.translation() << x * 0.001, y * 0.001, z * 0.001;
+    IKStatus res = ComputeIK(tf, init_jnt, jnts);
+    return res;
+}

@@ -28,17 +28,24 @@ void test_ik()
     kine_ptr->SetJntLimit(lower_limit, upper_limit);
 
     Eigen::VectorXd res_jnts(6);
-    for (int i = 0; i < 1000; ++i)
+    for (int i = 0; i < 1; ++i)
     {
         Eigen::VectorXd jnts(6);
         std::cout << "+++++++++++" << std::endl;
-        jnts << get_random_num(), get_random_num(), get_random_num(), get_random_num(), get_random_num(), get_random_num();
-        std::cout << "jnts:" << jnts.transpose() * 180 / M_PI << std::endl;
+        // jnts << get_random_num(), get_random_num(), get_random_num(), get_random_num(), get_random_num(), get_random_num();
+        // jnts << -33.9, -14.2, 5.8, 24.3, 95.3, 41.2;
+        // jnts = jnts * M_PI / 180;
+        // std::cout << "jnts:" << jnts.transpose() * 180 / M_PI << std::endl;
 
-        Eigen::Isometry3d tf = kine_ptr->ComputeFK(jnts, false);
+        // Eigen::Isometry3d tf = kine_ptr->ComputeFK(jnts, false);
         // std::cout << "tf:" << tf.matrix() << std::endl;
+        // auto euler = tf.linear().eulerAngles(2, 1, 0);
+        // std::cout << "euler:" << euler.transpose() * 180 / M_PI << std::endl;
+        // std::cout << "tf.linear():" << tf.matrix() << std::endl;
+        IKStatus res = kine_ptr->ComputeIK(159.139, 12.7896, 1.99324,
+                                           0.808799 * 1000, -0.592858 * 1000, 1.02067 * 1000, jnts, &res_jnts);
 
-        IKStatus res = kine_ptr->ComputeIK(tf, jnts, &res_jnts);
+        // IKStatus res = kine_ptr->ComputeIK(tf, jnts, &res_jnts);
         std::cout << "res_jnts:" << res_jnts.transpose() * 180 / M_PI << std::endl;
         if ((jnts - res_jnts).norm() > 1e-3)
         {

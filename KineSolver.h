@@ -20,15 +20,18 @@ enum class IKStatus : size_t
 class KineSolver
 {
 public:
-  KineSolver(const std::array<double, 7> &a, const std::array<double, 7> &alpha, const std::array<double, 7> &d, const std::array<double, 7> &theta);
+  KineSolver(const std::array<double, 7> &a, const std::array<double, 7> &alpha,
+             const std::array<double, 7> &d, const std::array<double, 7> &theta);
   ~KineSolver();
 
   Eigen::Isometry3d ComputeFK(const Eigen::VectorXd &jnts, bool is_deg = false);
   Eigen::Isometry3d ComputeBaseEndfTf(const Eigen::VectorXd &jnts, bool is_deg = false);
 
   IKStatus ComputeIK(const Eigen::Isometry3d &tf, const Eigen::VectorXd &init_jnt, Eigen::VectorXd *jnts);
-  void ComputeAllIK(const Eigen::Isometry3d &tf, std::vector<Eigen::VectorXd> *res_vec);
+  IKStatus ComputeIK(double w, double p, double r, double x, double y, double z,
+                     const Eigen::VectorXd &init_jnt, Eigen::VectorXd *jnts, bool is_deg = true);
 
+  void ComputeAllIK(const Eigen::Isometry3d &tf, std::vector<Eigen::VectorXd> *res_vec);
   void SetJntLimit(const std::array<double, 6> &lower, const std::array<double, 6> &upper);
 
 private:
@@ -38,8 +41,10 @@ private:
   IKStatus IsJointWithinLimit(const Eigen::VectorXd &jnt);
   void LimitJoints(double &joint);
   std::vector<double> SolveTrigonometricEquation(double a, double b, double c);
-  void SolveTheta3(double x, double y,std::vector<double> *theta3);
-  void SolveTheta2(double theta3,std::vector<double> *theta2);
+  void SolveTheta3(double x, double y, std::vector<double> *theta3);
+  void SolveTheta2(double theta3, std::vector<double> *theta2);
+  Eigen::Matrix3d ConvertWPR2Matrix(double w, double p, double r, bool is_deg = true);
+  void AdjustJntsAxisSeq(Eigen::VectorXd &jnts, bool is_dh2fanuc = true);
 
   std::array<double, 6> jnt_upper_limit_;
   std::array<double, 6> jnt_lower_limit_;
